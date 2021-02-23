@@ -1,14 +1,35 @@
-String repoUrl = "https://github.com/deepforu47/nr-terraform/tree/master/mobile_alerts"
-String branchName = env.BRANCH_NAME
+
+properties([
+    parameters ([
+        string(name: 'BRANCH_NAME', defaultValue: 'master', description: 'Brnach Name'),
+        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?'),
+        [$class: 'ChoiceParameter', 
+            choiceType: 'PT_SINGLE_SELECT', 
+            description: 'Create or Destroy', 
+            filterLength: 1, 
+            filterable: true, 
+            name: 'action', 
+            randomName: 'choice-parameter-ENVIRONMENT', 
+            script: [
+                $class: 'GroovyScript', 
+                fallbackScript: [
+                    classpath: [], 
+                    sandbox: true, 
+                    script: 
+                        'return[\'Could not get Value\']'
+                ], 
+                script: [
+                    classpath: [], 
+                    sandbox: true, 
+                    script: 
+                        'return["apply","destroy"]'
+                ]
+            ]
+        ]
+    ])
+])
 pipeline {
     agent any
-
-    parameters {
-        string(name: 'environment', defaultValue: 'default', description: 'Workspace/environment file to use for deployment')
-        string(name: 'version', defaultValue: '', description: 'Version variable to pass to /usr/local/bin/terraform')
-        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
-        string(name: 'BRANCH_NAME', defaultValue: 'master', description: 'Brnach Name')
-    }
     options {
         buildDiscarder(logRotator(numToKeepStr: '2', artifactNumToKeepStr: '3'))
     }
@@ -43,13 +64,12 @@ pipeline {
             }
         }
 
-        stage('Approval') {
+        stage('Approval for Apply') {
             when {
                 not {
-                    equals expected: true, actual: params.autoApprove
+                    equals expected: true, actual: params.autoApprove 
                 }
             }
-
             steps {
                 script {
                     dir('mobile_alerts')
@@ -63,18 +83,64 @@ pipeline {
         }
 
         stage('Apply') {
+           /* when {
+                // Only say hello if a "greeting" is requested
+                expression { params.action == 'apply' }
+            } */
             steps {
-                dir('mobile_alerts')
-                {
-                    sh "/usr/local/bin/terraform apply -input=false tfplan"
+                script {
+                    //if(params.action == 'apply' AND params.autoApprove = true) 
+                    //{
+                        dir('mobile_alerts')
+                        {
+                            sh "/usr/local/bin/terraform apply -auto-approve"
+                        }
+                    //}
                 }
             }
         }
-    }
+ /*      stage('Approval for Destroy') {
+            when {
+                not {
+                    equals expected: true, actual: params.autoApprove
+                }
+            }
+            steps {
+                script {
+                    dir('mobile_alerts')
+                    {
+                        def plan = 'yes'
+                        input message: "Do you want to destroy the plan?",
+                            parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                    }
+                }
+            }
+        }
+        stage('Destroy') {
+            when {
+                // Only say hello if a "greeting" is requested
+                expression { params.action == 'destroy' }
+            }           
+            steps {
+                script {
+                    if(params.action == 'destroy' AND params.autoApprove = true) 
+                    {
+                        dir('mobile_alerts')
+                        {
+                            sh "/usr/local/bin/terraform destroy"
+                        }
+                    }
+                }
+            }
+        } */
+    }      
 
     post {
         always {
-            archiveArtifacts artifacts: 'tfplan.txt'
+            dir('mobile_alerts')
+            {
+                archiveArtifacts artifacts: 'tfplan.txt'
+            }
         }
     }
 }
