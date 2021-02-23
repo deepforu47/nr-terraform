@@ -1,0 +1,6 @@
+{
+  "registry.terraform.io/newrelic/newrelic": {
+    "hash": "h1:F2tJqviGqua3OxmYIYqW4fpHO6VnJJVQbdnM0zdT+54=",
+    "version": "2.19.0"
+  }
+}
