@@ -1,3 +1,5 @@
+String repoUrl = "https://github.com/deepforu47/nr-terraform/tree/master/mobile_alerts"
+String branchName = env.BRANCH_NAME
 pipeline {
     agent any
 
@@ -5,24 +7,39 @@ pipeline {
         string(name: 'environment', defaultValue: 'default', description: 'Workspace/environment file to use for deployment')
         string(name: 'version', defaultValue: '', description: 'Version variable to pass to /usr/local/bin/terraform')
         booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
+        string(name: 'BRANCH_NAME', defaultValue: 'master', description: 'Brnach Name')
+    }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '2', artifactNumToKeepStr: '3'))
     }
     
     environment {
-        account_id     = credentials('NR_ACC_ID')
+        account_id = credentials('NR_ACC_ID')
         api_key = credentials('NR_API_KEY')
-        region      = credentials('NR_Region')
+        region = credentials('NR_Region')
     }
-
     stages {
+        stage('Checkout external proj') {
+            steps {
+                git branch: '${BRANCH_NAME}',
+                    url: 'https://github.com/deepforu47/nr-terraform'
+
+                sh "ls -lat"
+            }
+        }
         stage('Plan') {
             steps {
                 script {
                     currentBuild.displayName = params.version
                 }
-                sh '/usr/local/bin/terraform init -input=false'
-                sh '/usr/local/bin/terraform workspace select ${environment}'
-                sh "/usr/local/bin/terraform plan -input=false -out tfplan -var 'version=${params.version}' --var-file=variables.tfvars"
-                sh '/usr/local/bin/terraform show -no-color tfplan > tfplan.txt'
+                dir('nr-terraform/mobile_alerts')
+                {
+                    sh 'ls -lrth'
+                    sh '/usr/local/bin/terraform init -input=false'
+                    sh '/usr/local/bin/terraform workspace select ${environment}'
+                    sh "/usr/local/bin/terraform plan -input=false -out tfplan -var 'version=${params.version}' --var-file=variables.tfvars"
+                    sh '/usr/local/bin/terraform show -no-color tfplan > tfplan.txt'
+                }
             }
         }
 
@@ -44,7 +61,10 @@ pipeline {
 
         stage('Apply') {
             steps {
-                sh "/usr/local/bin/terraform apply -input=false tfplan"
+                dir(mobile_alerts)
+                {
+                    sh "/usr/local/bin/terraform apply -input=false tfplan"
+                }
             }
         }
     }
