@@ -10,7 +10,8 @@ terraform {
     }
   }
 }
-provider "newrelic" {}
+provider "newrelic" {
+  }
 
 resource "newrelic_alert_policy" "Mobile-DCS-TF" {
   name = "Mobile-DCS-TF"
