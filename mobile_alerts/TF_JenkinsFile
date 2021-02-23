@@ -93,7 +93,7 @@ pipeline {
                     //{
                         dir('mobile_alerts')
                         {
-                            sh "/usr/local/bin/terraform apply -auto-approve"
+                            sh "/usr/local/bin/terraform apply"
                         }
                     //}
                 }
