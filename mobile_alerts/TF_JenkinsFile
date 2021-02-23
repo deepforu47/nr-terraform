@@ -19,7 +19,7 @@ pipeline {
         region = credentials('NR_Region')
     }
     stages {
-        stage('Checkout external proj') {
+        stage('Checkout Code') {
             steps {
                 git branch: '${BRANCH_NAME}',
                     url: 'https://github.com/deepforu47/nr-terraform'
@@ -32,12 +32,12 @@ pipeline {
                 script {
                     currentBuild.displayName = params.version
                 }
-                dir('nr-terraform/mobile_alerts')
+                dir('mobile_alerts')
                 {
                     sh 'ls -lrth'
                     sh '/usr/local/bin/terraform init -input=false'
-                    sh '/usr/local/bin/terraform workspace select ${environment}'
-                    sh "/usr/local/bin/terraform plan -input=false -out tfplan -var 'version=${params.version}' --var-file=variables.tfvars"
+                    //sh '/usr/local/bin/terraform workspace select ${environment}'
+                    sh "/usr/local/bin/terraform plan -out tfplan --var-file=variables.tfvars"
                     sh '/usr/local/bin/terraform show -no-color tfplan > tfplan.txt'
                 }
             }

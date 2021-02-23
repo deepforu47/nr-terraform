@@ -23,7 +23,7 @@ resource "newrelic_alert_policy" "Mobile-DCS-TF" {
 
 # Response time
 resource "newrelic_nrql_alert_condition" "ModernAppiOS_98Percentile_ResponseTime" {
-  account_id                   = 1883088
+  account_id                   = var.account_id
   policy_id                    = newrelic_alert_policy.Mobile-DCS-TF.id
   type                         = "static"
   name                         = "ModernApp-iOS 98% Response Time"
