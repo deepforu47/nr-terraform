@@ -14,9 +14,9 @@ pipeline {
     }
     
     environment {
-        account_id = credentials('NR_ACC_ID')
-        api_key = credentials('NR_API_KEY')
-        region = credentials('NR_Region')
+        NEW_RELIC_API_KEY=credentials('NR_API_KEY')
+        NEW_RELIC_REGION=credentials('NR_Region')
+        NEW_RELIC_ACCOUNT_ID=credentials('NR_ACC_ID')
     }
     stages {
         stage('Checkout Code') {
@@ -37,7 +37,7 @@ pipeline {
                     sh 'ls -lrth'
                     sh '/usr/local/bin/terraform init -input=false'
                     //sh '/usr/local/bin/terraform workspace select ${environment}'
-                    sh "/usr/local/bin/terraform plan -out tfplan --var-file=variables.tfvars"
+                    sh "/usr/local/bin/terraform plan -out tfplan "
                     sh '/usr/local/bin/terraform show -no-color tfplan > tfplan.txt'
                 }
             }
@@ -52,16 +52,19 @@ pipeline {
 
             steps {
                 script {
-                    def plan = readFile 'tfplan.txt'
-                    input message: "Do you want to apply the plan?",
-                        parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                    dir('mobile_alerts')
+                    {
+                        def plan = readFile 'tfplan.txt'
+                        input message: "Do you want to apply the plan?",
+                            parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                    }
                 }
             }
         }
 
         stage('Apply') {
             steps {
-                dir(mobile_alerts)
+                dir('mobile_alerts')
                 {
                     sh "/usr/local/bin/terraform apply -input=false tfplan"
                 }

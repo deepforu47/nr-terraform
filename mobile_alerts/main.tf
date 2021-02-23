@@ -10,11 +10,7 @@ terraform {
     }
   }
 }
-provider "newrelic" {
-    account_id = var.account_id   # Your New Relic account ID
-    api_key = var.api_key # Your New Relic user key
-    region = var.region        # US or EU (defaults to US)
-  }
+provider "newrelic" {}
 
 resource "newrelic_alert_policy" "Mobile-DCS-TF" {
   name = "Mobile-DCS-TF"
