@@ -83,19 +83,12 @@ pipeline {
         }
 
         stage('Apply') {
-           /* when {
-                // Only say hello if a "greeting" is requested
-                expression { params.action == 'apply' }
-            } */
             steps {
                 script {
-                    //if(params.action == 'apply' AND params.autoApprove = true) 
-                    //{
                         dir('mobile_alerts')
                         {
-                            sh "/usr/local/bin/terraform apply"
+                            sh "/usr/local/bin/terraform apply -input=false tfplan"
                         }
-                    //}
                 }
             }
         }
